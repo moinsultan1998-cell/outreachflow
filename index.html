@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OutreachFlow AI</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.3.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f5;
+    --bg-tertiary: #f0efe9;
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6b66;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.22);
+    --accent: #534AB7;
+    --accent-dark: #3C3489;
+    --accent-light: #EEEDFE;
+    --accent-text: #534AB7;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1e1e1c;
+      --bg-secondary: #2a2a28;
+      --bg-tertiary: #161614;
+      --text-primary: #f0efe9;
+      --text-secondary: #a0a09a;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.2);
+      --accent-light: #2a2660;
+      --accent-text: #9b94e8;
+    }
+  }
+  body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary); height: 100vh; overflow: hidden; }
+  .app { display: flex; height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: 210px; background: var(--bg-primary); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { padding: 18px 16px 16px; border-bottom: 0.5px solid var(--border); }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 7px; }
+  .logo-name i { color: var(--accent); font-size: 16px; }
+  .logo-tagline { font-size: 11px; color: var(--text-secondary); margin-top: 2px; margin-left: 23px; }
+  .nav { padding: 8px 0; flex: 1; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; border-right: 2px solid transparent; }
+  .nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .nav-item.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; border-right-color: var(--accent); }
+  .nav-item i { font-size: 16px; }
+  .sidebar-footer { padding: 14px 16px; border-top: 0.5px solid var(--border); }
+  .usage-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; }
+  .usage-val { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .usage-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .usage-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 62%; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: var(--bg-primary); border-bottom: 0.5px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .page-title { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
+
+  /* BUTTONS */
+  .btn { padding: 7px 14px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; border: 0.5px solid var(--border-hover); background: var(--bg-primary); color: var(--text-primary); transition: all 0.15s; font-family: var(--font); }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+  .stat-val { font-size: 26px; font-weight: 500; color: var(--text-primary); line-height: 1; }
+  .stat-change { font-size: 12px; margin-top: 5px; }
+  .up { color: #3B6D11; } .flat { color: #854F0B; }
+
+  /* SECTION / TABLE */
+  .section { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+  .section-header { padding: 13px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .section-title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 9px 16px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text-secondary); border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-secondary); }
+  td { padding: 11px 16px; color: var(--text-primary); border-bottom: 0.5px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-secondary); }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-sent { background: #E6F1FB; color: #185FA5; }
+  .badge-replied { background: #EAF3DE; color: #3B6D11; }
+  .badge-pending { background: #FAEEDA; color: #854F0B; }
+  .badge-bounced { background: #FCEBEB; color: #A32D2D; }
+  .badge-active { background: #EAF3DE; color: #3B6D11; }
+  .badge-paused { background: #FAEEDA; color: #854F0B; }
+  .badge-completed { background: var(--bg-secondary); color: var(--text-secondary); }
+
+  /* ACTIVITY */
+  .activity-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+  /* COMPOSE */
+  .compose-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-row { margin-bottom: 13px; }
+  .field-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-weight: 500; }
+  input[type=text], textarea, select {
+    width: 100%; padding: 8px 10px; border: 0.5px solid var(--border-hover); border-radius: var(--radius-md);
+    font-size: 13px; font-family: var(--font); background: var(--bg-primary); color: var(--text-primary);
+    transition: border 0.15s; outline: none;
+  }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(83,74,183,0.12); }
+  textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+  select option { background: var(--bg-primary); }
+  .compose-pad { padding: 16px; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: var(--accent-light); color: var(--accent-text); border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-row { padding: 20px 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+  .output-box { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 14px; font-size: 13px; line-height: 1.65; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+  .subject-box { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px; }
+  .placeholder-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 13px; }
+  .placeholder-empty i { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.4; }
+
+  /* API KEY MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .modal { background: var(--bg-primary); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 24px; width: 400px; max-width: 90vw; }
+  .modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+  .modal a { color: var(--accent); text-decoration: none; }
+  .modal a:hover { text-decoration: underline; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+
+  /* SCORE BAR */
+  .score-wrap { display: flex; align-items: center; gap: 8px; }
+  .score-bar { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; width: 70px; }
+  .score-fill { height: 100%; background: var(--accent); border-radius: 99px; }
+
+  /* AVATAR */
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); color: var(--accent-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+  .name-cell { display: flex; align-items: center; gap: 10px; }
+
+  /* SEQUENCE */
+  .seq-card { border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
+  .seq-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .seq-step { background: var(--accent-light); color: var(--accent-text); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .seq-step-end { background: #E1F5EE; color: #0F6E56; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .sidebar { width: 48px; }
+    .logo-name span, .logo-tagline, .nav-item span, .sidebar-footer .usage-label, .sidebar-footer .usage-val { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .compose-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <h3><i class="ti ti-key" style="color:var(--accent);vertical-align:-2px;margin-right:6px"></i>Groq API Key (Free!)</h3>
+    <p>AI Compose ke liye <b>Groq API key</b> chahiye — bilkul <b>FREE</b>, no credit card!<br><br>
+    <a href="https://console.groq.com" target="_blank">console.groq.com</a> → Sign up (Google se bhi) → API Keys → Create Key → Paste karo</p>
+    <div class="field-row">
+      <div class="field-label">Apni API Key paste karein</div>
+      <input type="text" id="api-key-input" placeholder="gsk_..." />
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">Save & Continue</button>
+      <button class="btn" onclick="skipApiKey()">Skip (demo mode)</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-name"><i class="ti ti-send"></i><span>OutreachFlow</span></div>
+      <div class="logo-tagline">AI Outreach Suite</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showTab('dashboard')"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></div>
+      <div class="nav-item" onclick="showTab('prospects')"><i class="ti ti-users"></i><span>Prospects</span></div>
+      <div class="nav-item" onclick="showTab('compose')"><i class="ti ti-sparkles"></i><span>AI Compose</span></div>
+      <div class="nav-item" onclick="showTab('campaigns')"><i class="ti ti-chart-bar"></i><span>Campaigns</span></div>
+      <div class="nav-item" onclick="showTab('sequences')"><i class="ti ti-git-merge"></i><span>Sequences</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="usage-label">Emails this month</div>
+      <div class="usage-val">1,247 / 2,000</div>
+      <div class="usage-bar"><div class="usage-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <button class="btn btn-sm" onclick="showApiModal()"><i class="ti ti-key" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>API Key</button>
+        <button class="btn btn-primary btn-sm" onclick="showTab('compose')"><i class="ti ti-plus" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>New Outreach</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD TAB -->
+      <div id="tab-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label"><i class="ti ti-send" style="font-size:13px"></i>Emails Sent</div>
+            <div class="stat-val">1,247</div>
+            <div class="stat-change up"><i class="ti ti-trending-up" style="font-size:12px;vertical-align:-1px"></i> +18% this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="ti ti-mail-opened" style="font-size:13px"></i>Open Rate</div>
+            <div class="stat-val">34%</div>
+            <div class="stat-change up"><i class="ti ti-trending-up" style="font-size:12px;vertical-align:-1px"></i> +4% vs last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="ti ti-message-reply" style="font-size:13px"></i>Reply Rate</div>
+            <div class="stat-val">12%</div>
+            <div class="stat-change flat"><i class="ti ti-minus" style="font-size:12px;vertical-align:-1px"></i> Same as last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="ti ti-calendar-check" style="font-size:13px"></i>Meetings Booked</div>
+            <div class="stat-val">28</div>
+            <div class="stat-change up"><i class="ti ti-trending-up" style="font-size:12px;vertical-align:-1px"></i> +6 new this week</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">Active Campaigns</span>
+            <button class="btn btn-sm" onclick="showTab('campaigns')">View all</button>
+          </div>
+          <table>
+            <thead><tr><th>Campaign</th><th>Prospects</th><th>Sent</th><th>Opened</th><th>Replies</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>SaaS Founders Q2</td><td>340</td><td>280</td><td>38%</td><td>14%</td><td><span class="badge badge-active">Active</span></td></tr>
+              <tr><td>E-commerce Decision Makers</td><td>210</td><td>195</td><td>29%</td><td>9%</td><td><span class="badge badge-active">Active</span></td></tr>
+              <tr><td>Agency Owners — May</td><td>180</td><td>90</td><td>41%</td><td>17%</td><td><span class="badge badge-paused">Paused</span></td></tr>
+              <tr><td>Cold B2B Outreach</td><td>500</td><td>500</td><td>22%</td><td>7%</td><td><span class="badge badge-completed">Completed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <div class="section-header"><span class="section-title">Recent Activity</span></div>
+          <div style="padding:14px 16px;display:flex;flex-direction:column;gap:11px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;font-size:13px;">
+              <div class="activity-dot" style="background:#639922;"></div>
+              <div><strong>Ahmed Raza</strong> replied to your email — <span style="color:var(--text-secondary)">2 min ago</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;font-size:13px;">
+              <div class="activity-dot" style="background:#534AB7;"></div>
+              <div><strong>Sarah K.</strong> opened follow-up #2 — <span style="color:var(--text-secondary)">18 min ago</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;font-size:13px;">
+              <div class="activity-dot" style="background:#BA7517;"></div>
+              <div><strong>Campaign "Agency Owners"</strong> paused — daily limit reached — <span style="color:var(--text-secondary)">1 hr ago</span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;font-size:13px;">
+              <div class="activity-dot" style="background:#639922;"></div>
+              <div><strong>James Liu</strong> booked a meeting via Calendly — <span style="color:var(--text-secondary)">3 hrs ago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROSPECTS TAB -->
+      <div id="tab-prospects" class="hidden">
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">All Prospects</span>
+            <div style="display:flex;gap:8px;">
+              <input type="text" placeholder="Search..." id="prospect-search" oninput="filterProspects()" style="width:180px;padding:6px 10px;font-size:12px;" />
+              <button class="btn btn-primary btn-sm"><i class="ti ti-upload" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Import CSV</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Company</th><th>Title</th><th>Score</th><th>Status</th><th>Last Contact</th></tr></thead>
+            <tbody id="prospect-body">
+              <tr><td><div class="name-cell"><div class="avatar">AR</div>Ahmed Raza</div></td><td>TechScale Inc.</td><td>CEO</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:90%"></div></div>90</div></td><td><span class="badge badge-replied">Replied</span></td><td>Today</td></tr>
+              <tr><td><div class="name-cell"><div class="avatar">SK</div>Sarah Kim</div></td><td>GrowthCo</td><td>Head of Marketing</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:72%"></div></div>72</div></td><td><span class="badge badge-sent">Opened</span></td><td>Yesterday</td></tr>
+              <tr><td><div class="name-cell"><div class="avatar">JL</div>James Liu</div></td><td>Nexus Digital</td><td>Founder</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:95%"></div></div>95</div></td><td><span class="badge badge-replied">Meeting Booked</span></td><td>3 days ago</td></tr>
+              <tr><td><div class="name-cell"><div class="avatar">MP</div>Maria Perez</div></td><td>Shopify Plus Agency</td><td>Director, BD</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:55%"></div></div>55</div></td><td><span class="badge badge-pending">No reply</span></td><td>5 days ago</td></tr>
+              <tr><td><div class="name-cell"><div class="avatar">TN</div>Tom Nguyen</div></td><td>CloudBase</td><td>VP Sales</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:40%"></div></div>40</div></td><td><span class="badge badge-bounced">Bounced</span></td><td>1 week ago</td></tr>
+              <tr><td><div class="name-cell"><div class="avatar">RA</div>Ranya Al-Amin</div></td><td>Mena Ventures</td><td>Partner</td><td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:80%"></div></div>80</div></td><td><span class="badge badge-sent">Sent</span></td><td>Today</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI COMPOSE TAB -->
+      <div id="tab-compose" class="hidden">
+        <div class="compose-grid">
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Message Generator</span>
+              <span class="ai-badge"><i class="ti ti-sparkles" style="font-size:12px"></i>AI Powered</span>
+            </div>
+            <div class="compose-pad">
+              <div class="field-row">
+                <div class="field-label">Prospect Name</div>
+                <input type="text" id="p-name" placeholder="e.g. Ahmed Raza" />
+              </div>
+              <div class="field-row">
+                <div class="field-label">Company & Title</div>
+                <input type="text" id="p-company" placeholder="e.g. CEO at TechScale Inc." />
+              </div>
+              <div class="field-row">
+                <div class="field-label">Your Product / Service</div>
+                <input type="text" id="p-product" placeholder="e.g. AI outreach automation tool" />
+              </div>
+              <div class="field-row">
+                <div class="field-label">Email Type</div>
+                <select id="p-type">
+                  <option>Cold outreach — first touch</option>
+                  <option>Follow-up #1 (3 days later)</option>
+                  <option>Follow-up #2 (7 days later)</option>
+                  <option>Break-up email</option>
+                  <option>Value-add / case study</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Tone</div>
+                <select id="p-tone">
+                  <option>Professional & concise</option>
+                  <option>Friendly & conversational</option>
+                  <option>Data-driven & direct</option>
+                  <option>Story-led & warm</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="generateEmail()">
+                <i class="ti ti-sparkles" style="font-size:14px;vertical-align:-2px;margin-right:6px"></i>Generate with AI
+              </button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Generated Email</span>
+              <button class="btn btn-sm" id="copy-btn" onclick="copyEmail()" disabled>Copy</button>
+            </div>
+            <div class="compose-pad">
+              <div id="compose-loading" class="loading-row hidden"><div class="spinner"></div>Generating personalized email...</div>
+              <div id="compose-placeholder" class="placeholder-empty">
+                <i class="ti ti-mail"></i>
+                Fill in details and click Generate
+              </div>
+              <div id="compose-output" class="hidden">
+                <div class="field-label" style="margin-bottom:6px;">Subject</div>
+                <div class="subject-box" id="email-subject"></div>
+                <div class="field-label" style="margin-bottom:6px;">Body</div>
+                <div class="output-box" id="email-body"></div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                  <button class="btn" style="flex:1;font-size:12px;" onclick="generateEmail()"><i class="ti ti-refresh" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Regenerate</button>
+                  <button class="btn btn-primary" style="flex:1;font-size:12px;" onclick="addToCampaign()"><i class="ti ti-check" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Add to Campaign</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGNS TAB -->
+      <div id="tab-campaigns" class="hidden">
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">All Campaigns</span>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-plus" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>New Campaign</button>
+          </div>
+          <table>
+            <thead><tr><th>Campaign</th><th>Prospects</th><th>Open Rate</th><th>Reply Rate</th><th>Meetings</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500;">SaaS Founders Q2</td><td>340</td><td>38%</td><td>14%</td><td>11</td><td><span class="badge badge-active">Active</span></td><td><button class="btn btn-sm">Pause</button></td></tr>
+              <tr><td style="font-weight:500;">E-commerce Decision Makers</td><td>210</td><td>29%</td><td>9%</td><td>7</td><td><span class="badge badge-active">Active</span></td><td><button class="btn btn-sm">Pause</button></td></tr>
+              <tr><td style="font-weight:500;">Agency Owners — May</td><td>180</td><td>41%</td><td>17%</td><td>9</td><td><span class="badge badge-paused">Paused</span></td><td><button class="btn btn-sm">Resume</button></td></tr>
+              <tr><td style="font-weight:500;">Cold B2B Outreach</td><td>500</td><td>22%</td><td>7%</td><td>14</td><td><span class="badge badge-completed">Completed</span></td><td><button class="btn btn-sm">Archive</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SEQUENCES TAB -->
+      <div id="tab-sequences" class="hidden">
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">Email Sequences</span>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-plus" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>New Sequence</button>
+          </div>
+          <div style="padding:16px;">
+            <div class="seq-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:14px;font-weight:500;">Standard Cold Outreach</div>
+                <span class="badge badge-active">Active</span>
+              </div>
+              <div class="seq-steps">
+                <div class="seq-step">Day 1: Intro</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step">Day 4: Follow-up</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step">Day 9: Value add</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step-end">Day 14: Break-up</div>
+              </div>
+              <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">Used in 3 campaigns · 12% avg reply rate</div>
+            </div>
+            <div class="seq-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:14px;font-weight:500;">Agency Hyper-Personalized</div>
+                <span class="badge badge-active">Active</span>
+              </div>
+              <div class="seq-steps">
+                <div class="seq-step">Day 1: Research-led</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step">Day 3: Case study</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step">Day 7: Video</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step">Day 12: ROI angle</div>
+                <i class="ti ti-arrow-right" style="font-size:13px;color:var(--text-secondary)"></i>
+                <div class="seq-step-end">Day 18: Break-up</div>
+              </div>
+              <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">Used in 1 campaign · 17% avg reply rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const TABS = ['dashboard','prospects','compose','campaigns','sequences'];
+const TITLES = { dashboard:'Dashboard', prospects:'Prospects', compose:'AI Compose', campaigns:'Campaigns', sequences:'Sequences' };
+let apiKey = localStorage.getItem('of_api_key') || '';
+
+window.onload = function() {
+  if (!apiKey) document.getElementById('api-modal').style.display = 'flex';
+  else document.getElementById('api-modal').style.display = 'none';
+};
+
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (val) { apiKey = val; localStorage.setItem('of_api_key', val); }
+  document.getElementById('api-modal').style.display = 'none';
+}
+function skipApiKey() {
+  document.getElementById('api-modal').style.display = 'none';
+}
+function showApiModal() {
+  document.getElementById('api-key-input').value = apiKey;
+  document.getElementById('api-modal').style.display = 'flex';
+}
+
+function showTab(name) {
+  TABS.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t !== name));
+  document.querySelectorAll('.nav-item').forEach((el,i) => el.classList.toggle('active', TABS[i] === name));
+  document.getElementById('page-title').textContent = TITLES[name];
+}
+
+function filterProspects() {
+  const q = document.getElementById('prospect-search').value.toLowerCase();
+  document.querySelectorAll('#prospect-body tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+async function generateEmail() {
+  const name = document.getElementById('p-name').value.trim() || 'the prospect';
+  const company = document.getElementById('p-company').value.trim() || 'their company';
+  const product = document.getElementById('p-product').value.trim() || 'our solution';
+  const type = document.getElementById('p-type').value;
+  const tone = document.getElementById('p-tone').value;
+
+  document.getElementById('compose-placeholder').classList.add('hidden');
+  document.getElementById('compose-output').classList.add('hidden');
+  document.getElementById('compose-loading').classList.remove('hidden');
+  document.getElementById('copy-btn').disabled = true;
+
+  if (!apiKey) {
+    setTimeout(() => showDemoEmail(name, company, product), 1200);
+    return;
+  }
+
+  const prompt = `You are an expert cold email copywriter. Write a ${type} email to ${name} (${company}) about ${product}.
+Tone: ${tone}.
+Keep the body under 100 words, highly personalized, clear CTA.
+Respond ONLY as valid JSON (no markdown, no backticks): {"subject": "...", "body": "..."}`;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.choices[0].message.content;
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    showGeneratedEmail(parsed.subject, parsed.body);
+  } catch(e) {
+    showDemoEmail(name, company, product);
+  }
+}
+
+function showGeneratedEmail(subject, body) {
+  document.getElementById('email-subject').textContent = subject;
+  document.getElementById('email-body').textContent = body;
+  document.getElementById('compose-loading').classList.add('hidden');
+  document.getElementById('compose-output').classList.remove('hidden');
+  document.getElementById('copy-btn').disabled = false;
+}
+
+function showDemoEmail(name, company, product) {
+  showGeneratedEmail(
+    'Quick question about scaling ' + (company.includes(' at ') ? company.split(' at ')[1] : company),
+    'Hi ' + name + ',\n\nI noticed you\'re doing interesting work at ' + company + '.\n\nWe help companies like yours with ' + product + ' — typically saving 5+ hours/week while boosting reply rates by 30%.\n\nWould a quick 15-min call this week make sense?\n\nBest,\n[Your Name]'
+  );
+}
+
+function copyEmail() {
+  const subj = document.getElementById('email-subject').textContent;
+  const body = document.getElementById('email-body').textContent;
+  navigator.clipboard.writeText('Subject: ' + subj + '\n\n' + body).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+function addToCampaign() {
+  alert('Email added to campaign! (Integrate with your backend to save.)');
+}
+</script>
+</body>
+</html>
